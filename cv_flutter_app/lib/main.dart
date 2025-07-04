@@ -1,8 +1,16 @@
 import 'package:flutter/material.dart';
 import 'dart:async';
 import 'widgets/chat_widget.dart';
+import 'config/app_config.dart';
 
 void main() {
+  // Initialize app configuration
+  AppConfig.initialize(
+    env: Environment.development,
+    backendUrl: const String.fromEnvironment('BACKEND_URL',
+        defaultValue: 'http://localhost:8000'),
+  );
+
   runApp(const CVApp());
 }
 

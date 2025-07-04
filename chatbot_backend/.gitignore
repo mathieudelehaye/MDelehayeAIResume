@@ -20,10 +20,24 @@ wheels/
 .installed.cfg
 *.egg
 
-# Virtual Environment
+# Virtual Environment - both Unix and Windows style paths
 .venv/
+.venv/**/*
+.venv\**\*
 venv/
+venv/**/*
+venv\**\*
 ENV/
+env/
+virtualenv/
+.virtualenv/
+.python-version
+pyvenv.cfg
+
+# Python compiled files for Windows
+*.pyd
+*.dll
+*.exe
 
 # Environment Variables
 .env

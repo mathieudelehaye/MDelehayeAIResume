@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'dart:convert';
+import 'dart:io';
+import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
+import '../config/app_config.dart';
 
 class ChatWidget extends StatefulWidget {
   const ChatWidget({super.key});
@@ -26,7 +29,7 @@ class _ChatWidgetState extends State<ChatWidget> {
 
     try {
       final response = await http.post(
-        Uri.parse('http://localhost:8000/chat'),
+        Uri.parse(AppConfig.chatEndpoint),
         headers: {'Content-Type': 'application/json'},
         body: json.encode({'message': message}),
       );
@@ -40,7 +43,8 @@ class _ChatWidgetState extends State<ChatWidget> {
         setState(() {
           _messages.add({
             'role': 'assistant',
-            'content': 'Sorry, I encountered an error. Please try again.'
+            'content':
+                'Sorry, I encountered an error. Please try again. Status: ${response.statusCode}'
           });
         });
       }
@@ -48,7 +52,8 @@ class _ChatWidgetState extends State<ChatWidget> {
       setState(() {
         _messages.add({
           'role': 'assistant',
-          'content': 'Network error. Please check your connection.'
+          'content':
+              'Network error: ${e.toString()}. Please check your connection.'
         });
       });
     } finally {
