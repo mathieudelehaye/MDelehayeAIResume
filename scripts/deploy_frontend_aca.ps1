@@ -111,24 +111,6 @@ if (!(Test-Path $flutterAppPath)) {
     # exit 1
 }
 
-try {
-    Set-Location -Path $flutterAppPath
-    Write-Host "Running flutter clean..."
-    flutter clean
-    if ($LASTEXITCODE -ne 0) { throw "Flutter clean failed" }
-    
-    Write-Host "Running flutter pub get..."
-    flutter pub get
-    if ($LASTEXITCODE -ne 0) { throw "Flutter pub get failed" }
-    
-    Write-Host "Building Flutter web app..."
-    flutter config --enable-web
-    flutter build web --release
-    if ($LASTEXITCODE -ne 0) { throw "Flutter build failed" }
-} catch {
-    Write-Error "Error during Flutter build: $_"
-    # exit 1
-}
 
 # Always (re)generate nginx configuration template
 $nginxConfigPath = Join-Path -Path $flutterAppPath -ChildPath "default.conf.template"
@@ -228,7 +210,8 @@ EOF
 # Build and push Docker image
 Write-Host "Building and pushing Docker image..."
 Set-Location -Path $flutterAppPath
-docker build -t $FRONTEND_IMAGE .
+docker build -t $FRONTEND_IMAGE . `
+    --build-arg BACKEND_URL=$BACKEND_URL
 az acr login --name $REGISTRY
 docker push $FRONTEND_IMAGE
 

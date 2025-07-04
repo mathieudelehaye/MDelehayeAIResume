@@ -31,9 +31,6 @@ COPY --chown=flutter:flutter . .
 # Get app dependencies
 RUN flutter pub get
 
-# Build args for configuration
-ARG BACKEND_URL=http://192.168.0.62:8000
-
 # Build for web using HTML renderer
 ENV FLUTTER_WEB_RENDERER=html
 RUN flutter build web --release \
