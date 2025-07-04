@@ -1,8 +1,9 @@
 import os
 import logging
 from datetime import datetime
-from typing import List, Optional, Dict, Any
+from typing import List, Optional, Dict, Any, Iterable
 import asyncio
+import json
 
 # FastAPI imports
 from fastapi import FastAPI, HTTPException, Depends
@@ -16,15 +17,19 @@ from langchain.chains import ConversationalRetrievalChain
 from langchain.memory import ConversationBufferWindowMemory
 from langchain.schema import Document
 from langchain_openai import ChatOpenAI, OpenAIEmbeddings
-from langchain_community.vectorstores import Chroma
+from langchain_community.vectorstores.pgvector import PGVector
 from langchain.text_splitter import RecursiveCharacterTextSplitter
+from langchain.vectorstores.base import VectorStore
+from langchain.embeddings.base import Embeddings
 
 # Database and utilities
-import chromadb
-from chromadb.config import Settings
 import structlog
 from dotenv import load_dotenv
 import asyncpg, ssl
+from sqlalchemy import create_engine, text
+from sqlalchemy.orm import Session
+import psycopg
+from pgvector.psycopg import register_vector
 
 # Load environment variables
 load_dotenv()
@@ -49,6 +54,141 @@ structlog.configure(
 )
 
 logger = structlog.get_logger()
+
+class CustomPGVector(VectorStore):
+    """Custom implementation using our existing cv_embeddings table."""
+    
+    def __init__(
+        self,
+        connection_string: str,
+        embedding_function: Embeddings,
+        collection_name: str = "cv_embeddings",
+        pre_delete_collection: bool = False,
+    ):
+        """Initialize with connection to existing table."""
+        self.connection_string = connection_string
+        self.embedding_function = embedding_function
+        self.collection_name = collection_name
+        
+        # Create SQLAlchemy engine
+        self.engine = create_engine(connection_string)
+        
+        # Initialize psycopg connection with pgvector
+        self.conn = psycopg.connect(connection_string)
+        register_vector(self.conn)
+        
+    def add_texts(
+        self,
+        texts: Iterable[str],
+        metadatas: Optional[List[dict]] = None,
+        **kwargs: Any,
+    ) -> List[str]:
+        """Add text data to our existing table."""
+        # Generate embeddings
+        embeddings = self.embedding_function.embed_documents(list(texts))
+        
+        # Prepare metadata
+        if not metadatas:
+            metadatas = [{} for _ in texts]
+            
+        # Insert into our existing table using binary format
+        with self.conn.cursor() as cur:
+            ids = []
+            for content, metadata, embedding in zip(texts, metadatas, embeddings):
+                metadata_json = json.dumps(metadata)
+                cur.execute(
+                    """
+                    INSERT INTO cv_embeddings (content, embedding, metadata)
+                    VALUES (%s, %s::vector, %s::jsonb)
+                    RETURNING id
+                    """,
+                    (content, embedding, metadata_json)
+                )
+                ids.append(cur.fetchone()[0])
+            self.conn.commit()
+            
+        return [str(id_) for id_ in ids]
+        
+    def similarity_search(
+        self,
+        query: str,
+        k: int = 4,
+        **kwargs: Any,
+    ) -> List[Document]:
+        """Search for similar documents using cosine similarity."""
+        # Generate embedding for query
+        query_embedding = self.embedding_function.embed_query(query)
+        
+        # Search using pgvector's cosine similarity with binary format
+        with self.conn.cursor() as cur:
+            cur.execute(
+                """
+                SELECT content, metadata,
+                       1 - (embedding <=> %s::vector) as similarity
+                FROM cv_embeddings
+                ORDER BY embedding <=> %s::vector
+                LIMIT %s
+                """,
+                (query_embedding, query_embedding, k)
+            )
+            
+            documents = []
+            for content, metadata, similarity in cur.fetchall():
+                documents.append(
+                    Document(
+                        page_content=content,
+                        metadata=json.loads(metadata) if isinstance(metadata, str) else metadata
+                    )
+                )
+                
+        return documents
+
+    @classmethod
+    def from_texts(
+        cls,
+        texts: List[str],
+        embedding: Embeddings,
+        metadatas: Optional[List[dict]] = None,
+        connection_string: Optional[str] = None,
+        **kwargs: Any,
+    ) -> VectorStore:
+        """Create CustomPGVector from texts."""
+        if not connection_string:
+            connection_string = os.getenv("DATABASE_URL")
+            
+        instance = cls(
+            connection_string=connection_string,
+            embedding_function=embedding,
+            **kwargs
+        )
+        
+        instance.add_texts(texts=texts, metadatas=metadatas)
+        return instance
+
+    @classmethod
+    def from_documents(
+        cls,
+        documents: List[Document],
+        embedding: Embeddings,
+        connection_string: str,
+        **kwargs: Any,
+    ) -> VectorStore:
+        """Create CustomPGVector from documents."""
+        texts = [d.page_content for d in documents]
+        metadatas = [d.metadata for d in documents]
+        
+        return cls.from_texts(
+            texts=texts,
+            embedding=embedding,
+            metadatas=metadatas,
+            connection_string=connection_string,
+            **kwargs
+        )
+
+    def __del__(self):
+        """Close psycopg connection on cleanup."""
+        if hasattr(self, 'conn'):
+            self.conn.close()
 
 # FastAPI app configuration
 app = FastAPI(
@@ -181,7 +321,7 @@ MATHIEU_CV_SECTIONS = [
 # Global variables for LangChain components
 llm: Optional[ChatOpenAI] = None
 embeddings: Optional[OpenAIEmbeddings] = None
-vectorstore: Optional[Chroma] = None
+vectorstore: Optional[CustomPGVector] = None
 conversation_chains: Dict[str, ConversationalRetrievalChain] = {}
 db_pool: Optional[asyncpg.Pool] = None
 
@@ -219,16 +359,12 @@ async def initialize_ai_components():
         )
         split_docs = text_splitter.split_documents(documents)
         
-        # Initialize ChromaDB with new client configuration
-        persist_directory = "./chroma_db"
-        chroma_client = chromadb.PersistentClient(path=persist_directory)
-        
-        # Create vector store
-        vectorstore = Chroma.from_documents(
+        # Initialize vector store with our custom implementation
+        connection_string = os.getenv("DATABASE_URL")
+        vectorstore = CustomPGVector.from_documents(
             documents=split_docs,
             embedding=embeddings,
-            client=chroma_client,
-            collection_name="mathieu_cv"
+            connection_string=connection_string
         )
         
         logger.info("AI components initialized successfully")
@@ -237,35 +373,29 @@ async def initialize_ai_components():
         logger.error("Failed to initialize AI components", error=str(e))
         raise
 
-def create_cv_agent(session_id: str) -> ConversationalRetrievalChain:
-    """Create a conversational retrieval chain for CV questions"""
-    
-    # Create memory for conversation
-    memory = ConversationBufferWindowMemory(
-        k=10,  # Remember last 10 exchanges
-        memory_key="chat_history",
-        return_messages=True,
-        output_key="answer"
-    )
-    
-    # Create the conversational retrieval chain
-    chain = ConversationalRetrievalChain.from_llm(
-        llm=llm,
-        retriever=vectorstore.as_retriever(
-            search_type="similarity",
-            search_kwargs={"k": 4}
-        ),
-        memory=memory,
-        return_source_documents=True,
-        verbose=True
-    )
-    
-    return chain
-
 def get_conversation_chain(session_id: str) -> ConversationalRetrievalChain:
     """Get or create conversation chain for a session"""
     if session_id not in conversation_chains:
-        conversation_chains[session_id] = create_cv_agent(session_id)
+        # Create memory for conversation
+        memory = ConversationBufferWindowMemory(
+            k=10,  # Remember last 10 exchanges
+            memory_key="chat_history",
+            return_messages=True,
+            output_key="answer"
+        )
+        
+        # Create the conversational retrieval chain
+        chain = ConversationalRetrievalChain.from_llm(
+            llm=llm,
+            retriever=vectorstore.as_retriever(
+                search_type="similarity",
+                search_kwargs={"k": 4, "filter_duplicate_documents": True}
+            ),
+            memory=memory,
+            return_source_documents=True,
+            verbose=True
+        )
+        conversation_chains[session_id] = chain
     return conversation_chains[session_id]
 
 @app.on_event("startup")
@@ -312,19 +442,20 @@ async def chat_with_cv_bot(message: ChatMessage):
         # Get conversation chain for this session
         chain = get_conversation_chain(session_id)
         
-        # Process the message
+        # Process the message using invoke instead of __call__
         result = await asyncio.to_thread(
-            chain,
-            {"question": message.message}
+            lambda: chain.invoke({"question": message.message})
         )
         
-        # Extract sources
+        # Extract sources with deduplication
         sources = []
         if "source_documents" in result:
-            sources = [
-                doc.metadata.get("title", "CV Section") 
-                for doc in result["source_documents"]
-            ]
+            seen_titles = set()
+            for doc in result["source_documents"]:
+                title = doc.metadata.get("title", "CV Section")
+                if title not in seen_titles:
+                    sources.append(title)
+                    seen_titles.add(title)
         
         # Log the interaction
         logger.info(
