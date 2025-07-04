@@ -24,6 +24,7 @@
   <meta name="robots" content="index, follow">
 
   <!-- Force HTML renderer -->
+  <script src="flutter_web_renderer.js"></script>
   <script>
     window.flutterWebRenderer = "html";
   </script>
@@ -51,11 +52,15 @@
   <meta property="twitter:description" content="Experienced software engineer transitioning to quantitative finance. 10+ years in cybersecurity, embedded systems, and health tech. Currently pursuing MSc Financial Mathematics.">
   <meta property="twitter:image" content="https://mathieu-cv.azurecontainerapps.io/icons/Icon-512.png">
 
+  <!-- Content Security Policy -->
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.gstatic.com; connect-src 'self' http://localhost:8000 http://192.168.0.62:8000 https://fonts.googleapis.com https://fonts.gstatic.com https://www.gstatic.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https:; worker-src 'self' blob:;">
+
   <title>Mathieu Delehaye - Senior Software Engineer & Financial Mathematics Student</title>
   <link rel="manifest" href="manifest.json">
 
   <script>
-    var serviceWorkerVersion = null;
+    // The value below is injected by flutter build, do not touch.
+    const serviceWorkerVersion = null;
   </script>
   <script src="flutter.js" defer></script>
   
@@ -188,12 +193,16 @@
 
   <script>
     window.addEventListener('load', function(ev) {
+      // Download main.dart.js
       _flutter.loader.loadEntrypoint({
         serviceWorker: {
           serviceWorkerVersion: serviceWorkerVersion,
+          serviceWorkerEnabled: false // Disable service worker in development
         },
         onEntrypointLoaded: function(engineInitializer) {
-          engineInitializer.initializeEngine().then(function(appRunner) {
+          engineInitializer.initializeEngine({
+            renderer: 'html'  // Force HTML renderer
+          }).then(function(appRunner) {
             appRunner.runApp();
           });
         }

@@ -210,10 +210,21 @@ app = FastAPI(
     redoc_url="/redoc"
 )
 
+# Get allowed origins from environment or use defaults for local development
+default_origins = [
+    "http://localhost",
+    "http://localhost:80",
+    "http://127.0.0.1",
+    "http://127.0.0.1:80",
+    "http://192.168.0.62",
+    "http://192.168.0.62:80",
+]
+ALLOWED_ORIGINS = os.getenv("ALLOWED_ORIGINS", ",".join(default_origins)).split(",")
+
 # CORS configuration
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Configure for your specific domains in production
+    allow_origins=ALLOWED_ORIGINS,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

@@ -1,11 +1,11 @@
 {
-    "name": "cv_flutter_app",
-    "short_name": "cv_flutter_app",
+    "name": "Mathieu Delehaye's CV",
+    "short_name": "CV App",
     "start_url": ".",
     "display": "standalone",
-    "background_color": "#0175C2",
+    "background_color": "#ffffff",
     "theme_color": "#0175C2",
-    "description": "A new Flutter project.",
+    "description": "Mathieu Delehaye's AI-powered CV",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
     "icons": [
