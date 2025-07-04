@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'dart:async';
+import 'widgets/chat_widget.dart';
 
 void main() {
   runApp(const CVApp());
@@ -268,37 +269,42 @@ class CVPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.grey[50],
-      body: SelectionArea(
-        child: SingleChildScrollView(
-          child: Center(
-            child: Container(
-              constraints: const BoxConstraints(maxWidth: 800),
-              margin: const EdgeInsets.all(20),
-              child: Card(
-                elevation: 8,
-                child: Padding(
-                  padding: const EdgeInsets.all(40),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      _buildHeader(),
-                      const SizedBox(height: 30),
-                      _buildSummary(),
-                      const SizedBox(height: 30),
-                      _buildExperience(),
-                      const SizedBox(height: 30),
-                      _buildProjects(),
-                      const SizedBox(height: 30),
-                      _buildEducation(),
-                      const SizedBox(height: 30),
-                      _buildSkills(),
-                    ],
+      body: Stack(
+        children: [
+          SelectionArea(
+            child: SingleChildScrollView(
+              child: Center(
+                child: Container(
+                  constraints: const BoxConstraints(maxWidth: 800),
+                  margin: const EdgeInsets.all(20),
+                  child: Card(
+                    elevation: 8,
+                    child: Padding(
+                      padding: const EdgeInsets.all(40),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          _buildHeader(),
+                          const SizedBox(height: 30),
+                          _buildSummary(),
+                          const SizedBox(height: 30),
+                          _buildExperience(),
+                          const SizedBox(height: 30),
+                          _buildProjects(),
+                          const SizedBox(height: 30),
+                          _buildEducation(),
+                          const SizedBox(height: 30),
+                          _buildSkills(),
+                        ],
+                      ),
+                    ),
                   ),
                 ),
               ),
             ),
           ),
-        ),
+          const ChatWidget(),
+        ],
       ),
     );
   }

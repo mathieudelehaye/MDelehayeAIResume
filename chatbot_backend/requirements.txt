@@ -1,0 +1,41 @@
+# Core FastAPI and web framework
+fastapi==0.109.2
+uvicorn[standard]==0.27.1
+python-multipart==0.0.7
+python-dotenv==1.0.1
+
+# LangChain ecosystem
+langchain==0.1.6
+langchain-openai==0.0.5
+langchain-community>=0.0.18,<0.1
+langchain-core>=0.1.22,<0.2
+
+# OpenAI and AI models
+openai==1.11.1
+tiktoken==0.5.2
+
+# Vector database and embeddings
+chromadb==0.4.22
+sentence-transformers==2.3.1
+faiss-cpu==1.7.4
+
+# Database and storage
+asyncpg==0.29.0
+
+# Data processing and utilities
+pandas==2.2.0
+numpy==1.26.3
+pydantic==2.6.1
+
+# Optional: Quick UI for testing
+gradio==4.16.0
+
+# Logging and monitoring
+structlog==24.1.0
+
+# HTTP and CORS
+httpx==0.26.0
+
+# Text processing
+beautifulsoup4==4.12.3
+markdown==3.5.2 
