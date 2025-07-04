@@ -289,12 +289,18 @@ async def root():
 
 @app.get("/health", response_model=HealthResponse)
 async def health_check():
-    """Health check endpoint"""
-    return HealthResponse(
-        status="healthy",
-        timestamp=datetime.utcnow(),
-        version="2.0.0"
-    )
+    """Health check endpoint that also verifies critical dependencies."""
+    try:
+        # Check if required environment variables are set
+        assert os.getenv("OPENAI_API_KEY"), "OpenAI API key not configured"
+        
+        return HealthResponse(
+            status="healthy",
+            timestamp=datetime.utcnow(),
+            version="2.0.0"
+        )
+    except Exception as e:
+        raise HTTPException(status_code=503, detail=str(e))
 
 @app.post("/chat", response_model=ChatResponse)
 async def chat_with_cv_bot(message: ChatMessage):

@@ -1,0 +1,36 @@
+version: '3.8'
+
+services:
+  backend:
+    build: 
+      context: ./chatbot_backend
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    env_file:
+      - ./chatbot_backend/.env
+    environment:
+      - CHROMA_HOST=chroma
+      - CHROMA_PORT=8080
+      - ENVIRONMENT=development
+    volumes:
+      - ./chatbot_backend:/app
+    depends_on:
+      - chroma
+    command: uvicorn main:app --host 0.0.0.0 --port 8000 --reload
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+  chroma:
+    image: chromadb/chroma:latest
+    ports:
+      - "8080:8080"
+    volumes:
+      - chroma_data:/chroma/chroma
+
+volumes:
+  chroma_data: 
