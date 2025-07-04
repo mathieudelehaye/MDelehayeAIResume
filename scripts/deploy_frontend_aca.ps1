@@ -130,11 +130,10 @@ try {
     # exit 1
 }
 
-# Create nginx.conf if it doesn't exist
-$nginxConfigPath = Join-Path -Path $flutterAppPath -ChildPath "nginx.conf"
-if (!(Test-Path $nginxConfigPath)) {
-    Write-Host "Creating nginx configuration..."
-    $nginxConfig = @"
+# Always (re)generate nginx configuration template
+$nginxConfigPath = Join-Path -Path $flutterAppPath -ChildPath "default.conf.template"
+Write-Host "Writing nginx configuration template..."
+$nginxConfig = @"
 server {
     listen 80;
     server_name localhost;
@@ -146,7 +145,7 @@ server {
     add_header X-XSS-Protection "1; mode=block";
     add_header X-Content-Type-Options "nosniff";
     add_header Referrer-Policy "strict-origin-when-cross-origin";
-    add_header Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:; connect-src 'self' https://${`$BACKEND_URL};";
+    add_header Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:; connect-src 'self' https://`${BACKEND_URL};";
 
     # Gzip Settings
     gzip on;
@@ -164,7 +163,7 @@ server {
 
     location /api/ {
         rewrite ^/api/(.*) /`$1 break;
-        proxy_pass https://${`$BACKEND_URL};
+        proxy_pass https://`${BACKEND_URL};
         proxy_http_version 1.1;
         proxy_set_header Upgrade `$http_upgrade;
         proxy_set_header Connection 'upgrade';
@@ -175,14 +174,14 @@ server {
         proxy_set_header X-Forwarded-Proto `$scheme;
     }
 
-    # Handle Flutter routing
-    location ~ ^\. {
+    # Handle Flutter routing - match all locations except /api/
+    location ~ ^(?!/api/).* {
         try_files `$uri `$uri/ /index.html;
     }
 }
 "@
-    $nginxConfig | Set-Content $nginxConfigPath
-}
+
+$nginxConfig | Set-Content $nginxConfigPath
 
 # Create Dockerfile for Flutter web if it doesn't exist
 $dockerfilePath = Join-Path -Path $flutterAppPath -ChildPath "Dockerfile"
@@ -255,6 +254,8 @@ if ($frontendExists) {
         "--registry-server '$REGISTRY.azurecr.io' " + `
         "--registry-username $ACR_USERNAME " + `
         "--registry-password $ACR_PASSWORD " + `
+        "--secrets " + `
+        "backend-url='$BACKEND_URL' " + `
         "--set-env-vars " + `
         "BACKEND_URL=secretref:backend-url " + `
         "--query properties.configuration.ingress.fqdn"
