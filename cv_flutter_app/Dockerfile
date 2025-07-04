@@ -43,14 +43,14 @@ RUN flutter build web --release \
 # Stage 2: Serve the app using Nginx
 FROM nginx:alpine
 
-# Copy the built app
-COPY --from=builder /home/flutter/app/build/web /usr/share/nginx/html
+# Copy the built Flutter web app
+COPY build/web /usr/share/nginx/html
 
-# Copy nginx config
+# Copy custom nginx config
 COPY nginx.conf /etc/nginx/conf.d/default.conf
 
-# Expose port
+# Expose port 80
 EXPOSE 80
 
-# Start Nginx
+# Start nginx
 CMD ["nginx", "-g", "daemon off;"] 
