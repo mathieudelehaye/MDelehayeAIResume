@@ -29,6 +29,7 @@ import asyncpg, ssl
 from sqlalchemy import create_engine, text
 from sqlalchemy.orm import Session
 import psycopg
+from psycopg_pool import ConnectionPool
 from pgvector.psycopg import register_vector
 
 # Load environment variables
@@ -70,12 +71,20 @@ class CustomPGVector(VectorStore):
         self.embedding_function = embedding_function
         self.collection_name = collection_name
         
-        # Create SQLAlchemy engine
-        self.engine = create_engine(connection_string)
+        # Create connection pool with proper connection parameters
+        conn_params = psycopg.conninfo.conninfo_to_dict(connection_string)
+        self.pool = ConnectionPool(
+            kwargs=conn_params,
+            min_size=1,
+            max_size=5,
+            timeout=30.0,  # 30 second connection timeout
+            max_waiting=10.0,  # Maximum time to wait for a connection
+            num_workers=2  # Number of background workers
+        )
         
-        # Initialize psycopg connection with pgvector
-        self.conn = psycopg.connect(connection_string)
-        register_vector(self.conn)
+        # Register vector type with a test connection
+        with self.pool.connection() as conn:
+            register_vector(conn)
         
     def add_texts(
         self,
@@ -92,20 +101,21 @@ class CustomPGVector(VectorStore):
             metadatas = [{} for _ in texts]
             
         # Insert into our existing table using binary format
-        with self.conn.cursor() as cur:
-            ids = []
-            for content, metadata, embedding in zip(texts, metadatas, embeddings):
-                metadata_json = json.dumps(metadata)
-                cur.execute(
-                    """
-                    INSERT INTO cv_embeddings (content, embedding, metadata)
-                    VALUES (%s, %s::vector, %s::jsonb)
-                    RETURNING id
-                    """,
-                    (content, embedding, metadata_json)
-                )
-                ids.append(cur.fetchone()[0])
-            self.conn.commit()
+        with self.pool.connection() as conn:
+            with conn.cursor() as cur:
+                ids = []
+                for content, metadata, embedding in zip(texts, metadatas, embeddings):
+                    metadata_json = json.dumps(metadata)
+                    cur.execute(
+                        """
+                        INSERT INTO cv_embeddings (content, embedding, metadata)
+                        VALUES (%s, %s::vector, %s::jsonb)
+                        RETURNING id
+                        """,
+                        (content, embedding, metadata_json)
+                    )
+                    ids.append(cur.fetchone()[0])
+                conn.commit()
             
         return [str(id_) for id_ in ids]
         
@@ -120,27 +130,28 @@ class CustomPGVector(VectorStore):
         query_embedding = self.embedding_function.embed_query(query)
         
         # Search using pgvector's cosine similarity with binary format
-        with self.conn.cursor() as cur:
-            cur.execute(
-                """
-                SELECT content, metadata,
-                       1 - (embedding <=> %s::vector) as similarity
-                FROM cv_embeddings
-                ORDER BY embedding <=> %s::vector
-                LIMIT %s
-                """,
-                (query_embedding, query_embedding, k)
-            )
-            
-            documents = []
-            for content, metadata, similarity in cur.fetchall():
-                documents.append(
-                    Document(
-                        page_content=content,
-                        metadata=json.loads(metadata) if isinstance(metadata, str) else metadata
-                    )
+        with self.pool.connection() as conn:
+            with conn.cursor() as cur:
+                cur.execute(
+                    """
+                    SELECT content, metadata,
+                           1 - (embedding <=> %s::vector) as similarity
+                    FROM cv_embeddings
+                    ORDER BY embedding <=> %s::vector
+                    LIMIT %s
+                    """,
+                    (query_embedding, query_embedding, k)
                 )
                 
+                documents = []
+                for content, metadata, similarity in cur.fetchall():
+                    documents.append(
+                        Document(
+                            page_content=content,
+                            metadata=json.loads(metadata) if isinstance(metadata, str) else metadata
+                        )
+                    )
+                    
         return documents
 
     @classmethod
@@ -186,9 +197,9 @@ class CustomPGVector(VectorStore):
         )
 
     def __del__(self):
-        """Close psycopg connection on cleanup."""
-        if hasattr(self, 'conn'):
-            self.conn.close()
+        """Close connection pool on cleanup."""
+        if hasattr(self, 'pool'):
+            self.pool.close()
 
 # FastAPI app configuration
 app = FastAPI(
