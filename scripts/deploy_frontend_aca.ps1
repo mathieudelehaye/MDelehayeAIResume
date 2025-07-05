@@ -111,60 +111,6 @@ if (!(Test-Path $flutterAppPath)) {
     # exit 1
 }
 
-
-# Always (re)generate nginx configuration template
-$nginxConfigPath = Join-Path -Path $flutterAppPath -ChildPath "default.conf.template"
-Write-Host "Writing nginx configuration template..."
-$nginxConfig = @"
-server {
-    listen 80;
-    server_name localhost;
-    root /usr/share/nginx/html;
-    index index.html;
-
-    # Security headers
-    add_header X-Frame-Options "SAMEORIGIN";
-    add_header X-XSS-Protection "1; mode=block";
-    add_header X-Content-Type-Options "nosniff";
-    add_header Referrer-Policy "strict-origin-when-cross-origin";
-    add_header Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:; connect-src 'self' https://`${BACKEND_URL};";
-
-    # Gzip Settings
-    gzip on;
-    gzip_vary on;
-    gzip_min_length 10240;
-    gzip_proxied expired no-cache no-store private auth;
-    gzip_types text/plain text/css text/xml text/javascript application/x-javascript application/xml application/javascript;
-    gzip_disable "MSIE [1-6]\.";
-
-    location / {
-        try_files `$uri `$uri/ /index.html;
-        expires 1h;
-        add_header Cache-Control "public, no-transform";
-    }
-
-    location /api/ {
-        rewrite ^/api/(.*) /`$1 break;
-        proxy_pass https://`${BACKEND_URL};
-        proxy_http_version 1.1;
-        proxy_set_header Upgrade `$http_upgrade;
-        proxy_set_header Connection 'upgrade';
-        proxy_set_header Host `$host;
-        proxy_cache_bypass `$http_upgrade;
-        proxy_set_header X-Real-IP `$remote_addr;
-        proxy_set_header X-Forwarded-For `$proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto `$scheme;
-    }
-
-    # Handle Flutter routing - match all locations except /api/
-    location ~ ^(?!/api/).* {
-        try_files `$uri `$uri/ /index.html;
-    }
-}
-"@
-
-$nginxConfig | Set-Content $nginxConfigPath
-
 # Create Dockerfile for Flutter web if it doesn't exist
 $dockerfilePath = Join-Path -Path $flutterAppPath -ChildPath "Dockerfile"
 if (!(Test-Path $dockerfilePath)) {

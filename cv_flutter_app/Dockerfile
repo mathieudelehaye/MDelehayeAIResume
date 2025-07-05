@@ -32,19 +32,19 @@ COPY --chown=flutter:flutter . .
 RUN flutter pub get
 
 # Build for web using HTML renderer
-ENV FLUTTER_WEB_RENDERER=html
 RUN flutter build web --release \
     --dart-define=BACKEND_URL=$BACKEND_URL \
+    --dart-define=FLUTTER_WEB_RENDERER=html \
     --dart-define=FLUTTER_WEB_USE_SKIA=false
 
 # Stage 2: Serve the app using Nginx
 FROM nginx:alpine
 
-# Copy the built Flutter web app
+# web bundle built in the previous stage
 COPY build/web /usr/share/nginx/html
 
-# Copy custom nginx config
-COPY default.conf.template /etc/nginx/conf.d/default.conf.template
+# our nginx template that gets env-substituted at container start-up
+COPY default.conf.template /etc/nginx/templates/default.conf.template
 
 # Expose port 80
 EXPOSE 80

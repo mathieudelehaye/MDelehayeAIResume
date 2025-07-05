@@ -121,4 +121,3 @@ app.*.symbols
 
 # Nginx configuration files
 cv_flutter_app/nginx.conf
-cv_flutter_app/default.conf.template

@@ -24,13 +24,14 @@
   <meta name="robots" content="index, follow">
 
   <!-- Force HTML renderer -->
-  <script src="flutter_web_renderer.js"></script>
   <script>
     window.flutterWebRenderer = "html";
   </script>
 
+  <meta name="flutter-web-renderer" content="html">
+  
   <!-- iOS meta tags & icons -->
-  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black">
   <meta name="apple-mobile-web-app-title" content="Mathieu Delehaye - CV">
   <link rel="apple-touch-icon" href="icons/Icon-192.png">
@@ -62,6 +63,7 @@
     // The value below is injected by flutter build, do not touch.
     const serviceWorkerVersion = null;
   </script>
+
   <script src="flutter.js" defer></script>
   
   <style>
