@@ -6,6 +6,8 @@ A modern, responsive CV built with Flutter that works on web, mobile, and deskto
 
 **🚀 [View Live CV Application](https://frontend-mdelehaye-cv.wittyflower-c2822a5a.eastus.azurecontainerapps.io/)**
 
+> **⏳ Note:** The first question to the chatbot may take a couple of seconds to respond as the system initializes. Subsequent questions will be much faster.
+
 ## 📸 Screenshots
 
 ### Desktop & Web View
