@@ -1,6 +1,9 @@
 # Stage 1: Build the Flutter web app
 FROM ubuntu:22.04 AS builder
 
+# Declare build argument
+ARG BACKEND_URL
+
 # Install dependencies
 RUN apt-get update && apt-get install -y \
     curl \
@@ -38,11 +41,14 @@ RUN flutter build web --release --wasm \
 # Stage 2: Serve the app using Nginx
 FROM nginx:alpine
 
-# Copy the compiled web assets out of the builder image
+# Copy web bundle built in the previous stage
 COPY --from=builder /home/flutter/app/build/web /usr/share/nginx/html
 
-# our nginx template that gets env-substituted at container start-up
+# Copy our nginx template that gets env-substituted at container start-up
 COPY default.conf.template /etc/nginx/templates/default.conf.template
 
+# Expose port 80
 EXPOSE 80
+
+# Start nginx
 CMD ["nginx", "-g", "daemon off;"]

@@ -31,7 +31,6 @@ services:
       context: ./cv_flutter_app
       dockerfile: Dockerfile
       args:
-        # In development, use the host IP.
         - BACKEND_URL=${BACKEND_URL}
     environment:
       - BACKEND_URL=${BACKEND_URL}
