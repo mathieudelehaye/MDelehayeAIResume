@@ -31,12 +31,12 @@ services:
       context: ./cv_flutter_app
       dockerfile: Dockerfile
       args:
-        # In development, use the host IP. In Azure, this will be the backend's FQDN
-        - BACKEND_URL=http://192.168.0.62:8000
+        # In development, use the host IP.
+        - BACKEND_URL=${BACKEND_URL}
+    environment:
+      - BACKEND_URL=${BACKEND_URL}
     ports:
       - "80:80"
-    depends_on:
-      - backend
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:80"]
       interval: 30s

@@ -111,48 +111,6 @@ if (!(Test-Path $flutterAppPath)) {
     # exit 1
 }
 
-# Create Dockerfile for Flutter web if it doesn't exist
-$dockerfilePath = Join-Path -Path $flutterAppPath -ChildPath "Dockerfile"
-if (!(Test-Path $dockerfilePath)) {
-    Write-Host "Creating Dockerfile..."
-    @"
-FROM nginx:alpine
-
-# Copy the built Flutter web app
-COPY build/web /usr/share/nginx/html
-
-# Copy custom nginx config
-COPY nginx.conf /etc/nginx/conf.d/default.conf
-
-# Create directory for runtime environment config
-RUN mkdir -p /usr/share/nginx/html/assets/config
-
-# Copy environment script
-COPY env.sh /docker-entrypoint.d/40-env.sh
-RUN chmod +x /docker-entrypoint.d/40-env.sh
-
-# Expose port 80
-EXPOSE 80
-
-# Start nginx
-CMD ["nginx", "-g", "daemon off;"]
-"@ | Set-Content $dockerfilePath
-}
-
-# Create environment script for runtime configuration
-$envScriptPath = Join-Path -Path $flutterAppPath -ChildPath "env.sh"
-Write-Host "Creating environment script..."
-@"
-#!/bin/sh
-
-# Create runtime environment configuration
-cat > /usr/share/nginx/html/assets/config/env.js <<EOF
-window.env = {
-  'BACKEND_URL': '${"$BACKEND_URL"}'
-};
-EOF
-"@ | Set-Content $envScriptPath -NoNewline
-
 # Build and push Docker image
 Write-Host "Building and pushing Docker image..."
 Set-Location -Path $flutterAppPath
