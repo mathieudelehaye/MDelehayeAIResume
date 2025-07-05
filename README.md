@@ -13,8 +13,8 @@ A modern, responsive CV built with Flutter that works on web, mobile, and deskto
 
 ### Mobile Views
 <div style="display: flex; gap: 20px;">
-  <img src="Screenshots/Screenshots01.png" alt="Mobile CV View" width="45%" />
-  <img src="Screenshots/Screenshots02.png" alt="Mobile Chat View" width="45%" />
+  <img src="Screenshots/Screenshots01.png" alt="Mobile CV View" width="35%" />
+  <img src="Screenshots/Screenshots02.png" alt="Mobile Chat View" width="35%" />
 </div>
 
 ## 🚀 Features
