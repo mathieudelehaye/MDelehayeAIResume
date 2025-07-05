@@ -189,7 +189,7 @@ if ($backendExists) {
         "ENVIRONMENT=production " + `
         "OPENAI_API_KEY=secretref:openai-api-key " + `
         "DATABASE_URL=secretref:database-url " + `
-        "ALLOWED_ORIGINS=https://frontend-mdelehaye-cv.azurecontainerapps.io"
+        "ALLOWED_ORIGINS=https://frontend-mdelehaye-cv.wittyflower-c2822a5a.eastus.azurecontainerapps.io/"
 
     # Update registry credentials separately if needed
     Write-Host "Updating registry credentials..."
@@ -222,7 +222,7 @@ if ($backendExists) {
         "ENVIRONMENT=production " + `
         "OPENAI_API_KEY=secretref:openai-api-key " + `
         "DATABASE_URL=secretref:database-url " + `
-        "ALLOWED_ORIGINS=https://frontend-mdelehaye-cv.azurecontainerapps.io"
+        "ALLOWED_ORIGINS=https://frontend-mdelehaye-cv.wittyflower-c2822a5a.eastus.azurecontainerapps.io/"
 
     $BACKEND_URL = Invoke-Expression "$createCmd --query 'properties.configuration.ingress.fqdn' -o tsv"
 }

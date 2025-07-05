@@ -6,83 +6,58 @@ import asyncio
 import json
 
 # FastAPI imports
-from fastapi import FastAPI, HTTPException, Depends
+from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 
 # LangChain imports
-from langchain.agents import initialize_agent, AgentType
-from langchain.agents.tools import Tool
 from langchain.chains import ConversationalRetrievalChain
 from langchain.memory import ConversationBufferWindowMemory
 from langchain.schema import Document
 from langchain_openai import ChatOpenAI, OpenAIEmbeddings
-from langchain_community.vectorstores.pgvector import PGVector
 from langchain.text_splitter import RecursiveCharacterTextSplitter
-from langchain.vectorstores.base import VectorStore
-from langchain.embeddings.base import Embeddings
+from langchain_core.vectorstores import VectorStore
+from langchain_core.embeddings import Embeddings
 
-# Database and utilities
-import structlog
-from dotenv import load_dotenv
-import asyncpg, ssl
-from sqlalchemy import create_engine, text
-from sqlalchemy.orm import Session
+# Database for CV embeddings (READ-ONLY)
 import psycopg
 from psycopg_pool import ConnectionPool
 from pgvector.psycopg import register_vector
 
 # Load environment variables
+from dotenv import load_dotenv
 load_dotenv()
 
-# Configure structured logging
-structlog.configure(
-    processors=[
-        structlog.stdlib.filter_by_level,
-        structlog.stdlib.add_logger_name,
-        structlog.stdlib.add_log_level,
-        structlog.stdlib.PositionalArgumentsFormatter(),
-        structlog.processors.TimeStamper(fmt="iso"),
-        structlog.processors.StackInfoRenderer(),
-        structlog.processors.format_exc_info,
-        structlog.processors.UnicodeDecoder(),
-        structlog.processors.JSONRenderer()
-    ],
-    context_class=dict,
-    logger_factory=structlog.stdlib.LoggerFactory(),
-    wrapper_class=structlog.stdlib.BoundLogger,
-    cache_logger_on_first_use=True,
-)
-
-logger = structlog.get_logger()
+# Configure basic logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 class CustomPGVector(VectorStore):
-    """Custom implementation using our existing cv_embeddings table."""
+    """Custom implementation for READ-ONLY access to existing cv_embeddings table."""
     
     def __init__(
         self,
         connection_string: str,
         embedding_function: Embeddings,
         collection_name: str = "cv_embeddings",
-        pre_delete_collection: bool = False,
     ):
-        """Initialize with connection to existing table."""
+        """Initialize with READ-ONLY connection to existing CV embeddings table."""
         self.connection_string = connection_string
         self.embedding_function = embedding_function
         self.collection_name = collection_name
         
-        # Create connection pool with proper connection parameters
+        # Create connection pool for READ-ONLY access
         conn_params = psycopg.conninfo.conninfo_to_dict(connection_string)
         self.pool = ConnectionPool(
             kwargs=conn_params,
             min_size=1,
             max_size=5,
-            timeout=30.0,  # 30 second connection timeout
-            max_waiting=10.0,  # Maximum time to wait for a connection
-            num_workers=2  # Number of background workers
+            timeout=30.0,
+            max_waiting=10.0,
+            num_workers=2
         )
         
-        # Register vector type with a test connection
+        # Register vector type
         with self.pool.connection() as conn:
             register_vector(conn)
         
@@ -92,32 +67,8 @@ class CustomPGVector(VectorStore):
         metadatas: Optional[List[dict]] = None,
         **kwargs: Any,
     ) -> List[str]:
-        """Add text data to our existing table."""
-        # Generate embeddings
-        embeddings = self.embedding_function.embed_documents(list(texts))
-        
-        # Prepare metadata
-        if not metadatas:
-            metadatas = [{} for _ in texts]
-            
-        # Insert into our existing table using binary format
-        with self.pool.connection() as conn:
-            with conn.cursor() as cur:
-                ids = []
-                for content, metadata, embedding in zip(texts, metadatas, embeddings):
-                    metadata_json = json.dumps(metadata)
-                    cur.execute(
-                        """
-                        INSERT INTO cv_embeddings (content, embedding, metadata)
-                        VALUES (%s, %s::vector, %s::jsonb)
-                        RETURNING id
-                        """,
-                        (content, embedding, metadata_json)
-                    )
-                    ids.append(cur.fetchone()[0])
-                conn.commit()
-            
-        return [str(id_) for id_ in ids]
+        """Not implemented - READ-ONLY access to existing CV embeddings."""
+        raise NotImplementedError("This vector store is READ-ONLY for CV embeddings")
         
     def similarity_search(
         self,
@@ -125,11 +76,11 @@ class CustomPGVector(VectorStore):
         k: int = 4,
         **kwargs: Any,
     ) -> List[Document]:
-        """Search for similar documents using cosine similarity."""
+        """Search for similar documents using cosine similarity (READ-ONLY)."""
         # Generate embedding for query
         query_embedding = self.embedding_function.embed_query(query)
         
-        # Search using pgvector's cosine similarity with binary format
+        # Search using pgvector's cosine similarity
         with self.pool.connection() as conn:
             with conn.cursor() as cur:
                 cur.execute(
@@ -155,28 +106,6 @@ class CustomPGVector(VectorStore):
         return documents
 
     @classmethod
-    def from_texts(
-        cls,
-        texts: List[str],
-        embedding: Embeddings,
-        metadatas: Optional[List[dict]] = None,
-        connection_string: Optional[str] = None,
-        **kwargs: Any,
-    ) -> VectorStore:
-        """Create CustomPGVector from texts."""
-        if not connection_string:
-            connection_string = os.getenv("DATABASE_URL")
-            
-        instance = cls(
-            connection_string=connection_string,
-            embedding_function=embedding,
-            **kwargs
-        )
-        
-        instance.add_texts(texts=texts, metadatas=metadatas)
-        return instance
-
-    @classmethod
     def from_documents(
         cls,
         documents: List[Document],
@@ -184,15 +113,10 @@ class CustomPGVector(VectorStore):
         connection_string: str,
         **kwargs: Any,
     ) -> VectorStore:
-        """Create CustomPGVector from documents."""
-        texts = [d.page_content for d in documents]
-        metadatas = [d.metadata for d in documents]
-        
-        return cls.from_texts(
-            texts=texts,
-            embedding=embedding,
-            metadatas=metadatas,
+        """Create CustomPGVector with READ-ONLY access to existing CV embeddings."""
+        return cls(
             connection_string=connection_string,
+            embedding_function=embedding,
             **kwargs
         )
 
@@ -201,10 +125,10 @@ class CustomPGVector(VectorStore):
         if hasattr(self, 'pool'):
             self.pool.close()
 
-# FastAPI app configuration
+# FastAPI app
 app = FastAPI(
-    title="CV Chatbot API with LangChain Agents",
-    description="Advanced AI chatbot using LangChain agents to answer questions about Mathieu Delehaye's CV",
+    title="CV Chatbot API",
+    description="AI-powered chatbot for Mathieu Delehaye's CV using LangChain with READ-ONLY database access",
     version="2.0.0",
     docs_url="/docs",
     redoc_url="/redoc"
@@ -246,7 +170,7 @@ class HealthResponse(BaseModel):
     timestamp: datetime
     version: str
 
-# CV content for the knowledge base
+# CV content for fallback (if database is unavailable)
 MATHIEU_CV_SECTIONS = [
     {
         "title": "Professional Summary",
@@ -345,7 +269,6 @@ llm: Optional[ChatOpenAI] = None
 embeddings: Optional[OpenAIEmbeddings] = None
 vectorstore: Optional[CustomPGVector] = None
 conversation_chains: Dict[str, ConversationalRetrievalChain] = {}
-db_pool: Optional[asyncpg.Pool] = None
 
 async def initialize_ai_components():
     """Initialize OpenAI, embeddings, and vector store"""
@@ -364,35 +287,51 @@ async def initialize_ai_components():
             openai_api_key=os.getenv("OPENAI_API_KEY")
         )
         
-        # Create documents from CV sections
-        documents = []
-        for section in MATHIEU_CV_SECTIONS:
-            doc = Document(
-                page_content=section["content"],
-                metadata={"title": section["title"], "source": "cv"}
-            )
-            documents.append(doc)
-        
-        # Split documents for better retrieval
-        text_splitter = RecursiveCharacterTextSplitter(
-            chunk_size=500,
-            chunk_overlap=50,
-            separators=["\n\n", "\n", ".", "!", "?", ",", " ", ""]
-        )
-        split_docs = text_splitter.split_documents(documents)
-        
-        # Initialize vector store with our custom implementation
+        # Try to connect to database for CV embeddings (READ-ONLY)
         connection_string = os.getenv("DATABASE_URL")
-        vectorstore = CustomPGVector.from_documents(
-            documents=split_docs,
-            embedding=embeddings,
-            connection_string=connection_string
-        )
+        if connection_string:
+            try:
+                vectorstore = CustomPGVector(
+                    connection_string=connection_string,
+                    embedding_function=embeddings
+                )
+                logger.info("Connected to database for CV embeddings (READ-ONLY)")
+            except Exception as db_error:
+                logger.warning(f"Database connection failed, using fallback: {str(db_error)}")
+                vectorstore = None
+        
+        # Fallback to in-memory if database unavailable
+        if not vectorstore:
+            from langchain_community.vectorstores import Chroma
+            
+            # Create documents from CV sections
+            documents = []
+            for section in MATHIEU_CV_SECTIONS:
+                doc = Document(
+                    page_content=section["content"],
+                    metadata={"title": section["title"], "source": "cv"}
+                )
+                documents.append(doc)
+            
+            # Split documents for better retrieval
+            text_splitter = RecursiveCharacterTextSplitter(
+                chunk_size=500,
+                chunk_overlap=50,
+                separators=["\n\n", "\n", ".", "!", "?", ",", " ", ""]
+            )
+            split_docs = text_splitter.split_documents(documents)
+            
+            # Initialize vector store with Chroma (in-memory fallback)
+            vectorstore = Chroma.from_documents(
+                documents=split_docs,
+                embedding=embeddings
+            )
+            logger.info("Using in-memory vector store (fallback)")
         
         logger.info("AI components initialized successfully")
         
     except Exception as e:
-        logger.error("Failed to initialize AI components", error=str(e))
+        logger.error(f"Failed to initialize AI components: {str(e)}")
         raise
 
 def get_conversation_chain(session_id: str) -> ConversationalRetrievalChain:
@@ -411,7 +350,7 @@ def get_conversation_chain(session_id: str) -> ConversationalRetrievalChain:
             llm=llm,
             retriever=vectorstore.as_retriever(
                 search_type="similarity",
-                search_kwargs={"k": 4, "filter_duplicate_documents": True}
+                search_kwargs={"k": 4}
             ),
             memory=memory,
             return_source_documents=True,
@@ -424,19 +363,15 @@ def get_conversation_chain(session_id: str) -> ConversationalRetrievalChain:
 async def startup_event():
     """Initialize AI components on startup"""
     await initialize_ai_components()
-    # Initialise Postgres connection pool (Neon)
-    try:
-        await init_db()
-    except Exception as db_err:
-        logger.error("Database init failed", error=str(db_err))
 
 @app.get("/", response_model=Dict[str, str])
 async def root():
     """Root endpoint"""
     return {
-        "message": "CV Chatbot API with LangChain Agents",
+        "message": "CV Chatbot API with LangChain",
         "version": "2.0.0",
-        "docs": "/docs"
+        "docs": "/docs",
+        "privacy": "This service processes messages with OpenAI API and accesses READ-ONLY CV data but does not store user chat history."
     }
 
 @app.get("/health", response_model=HealthResponse)
@@ -456,7 +391,7 @@ async def health_check():
 
 @app.post("/chat", response_model=ChatResponse)
 async def chat_with_cv_bot(message: ChatMessage):
-    """Main chat endpoint using LangChain agents"""
+    """Main chat endpoint using LangChain"""
     try:
         # Generate session ID if not provided
         session_id = message.session_id or f"session_{datetime.utcnow().timestamp()}"
@@ -464,7 +399,7 @@ async def chat_with_cv_bot(message: ChatMessage):
         # Get conversation chain for this session
         chain = get_conversation_chain(session_id)
         
-        # Process the message using invoke instead of __call__
+        # Process the message using invoke
         result = await asyncio.to_thread(
             lambda: chain.invoke({"question": message.message})
         )
@@ -479,17 +414,10 @@ async def chat_with_cv_bot(message: ChatMessage):
                     sources.append(title)
                     seen_titles.add(title)
         
-        # Log the interaction
+        # Log the interaction (console only, no database storage of user data)
         logger.info(
-            "Chat interaction",
-            session_id=session_id,
-            question=message.message,
-            response_length=len(result["answer"]),
-            sources=sources
+            f"Chat interaction - Session: {session_id}, Question length: {len(message.message)}, Response length: {len(result['answer'])}, Sources: {sources}"
         )
-        
-        # Persist to database (best-effort)
-        await log_interaction(session_id, message.message, result["answer"])
         
         return ChatResponse(
             response=result["answer"],
@@ -499,7 +427,7 @@ async def chat_with_cv_bot(message: ChatMessage):
         )
         
     except Exception as e:
-        logger.error("Chat error", error=str(e), session_id=session_id)
+        logger.error(f"Chat error - Session: {session_id}, Error: {str(e)}")
         raise HTTPException(
             status_code=500, 
             detail=f"Failed to process chat message: {str(e)}"
@@ -529,12 +457,12 @@ async def reset_session(session_id: str):
     try:
         if session_id in conversation_chains:
             del conversation_chains[session_id]
-            logger.info("Session reset", session_id=session_id)
+            logger.info(f"Session reset: {session_id}")
             return {"message": f"Session {session_id} reset successfully"}
         else:
             return {"message": f"Session {session_id} not found"}
     except Exception as e:
-        logger.error("Session reset error", error=str(e), session_id=session_id)
+        logger.error(f"Session reset error - Session: {session_id}, Error: {str(e)}")
         raise HTTPException(status_code=500, detail="Failed to reset session")
 
 @app.get("/active-sessions")
@@ -544,51 +472,6 @@ async def get_active_sessions():
         "active_sessions": list(conversation_chains.keys()),
         "count": len(conversation_chains)
     }
-
-# -----------------------------
-# Database (PostgreSQL / Neon)
-# -----------------------------
-
-async def init_db():
-    """Create connection pool and ensure chat_logs table exists."""
-    global db_pool
-    if db_pool is not None:
-        return  # Already initialised
-
-    # Prefer full DATABASE_URL if provided (e.g. from Neon dashboard)
-    db_url = os.getenv("DATABASE_URL")
-
-    if not db_url:
-        host = os.getenv("DB_HOST", "localhost")
-        port = int(os.getenv("DB_PORT", 5432))
-        user = os.getenv("DB_USER", "postgres")
-        password = os.getenv("DB_PASSWORD", "password")
-        db_name = os.getenv("DB_NAME", "cv_ai_logs")
-        db_url = f"postgresql://{user}:{password}@{host}:{port}/{db_name}"
-
-    ssl_mode = os.getenv("DB_SSL_MODE", "require").lower()
-    ssl_context = None
-    if ssl_mode == "require":
-        ssl_context = ssl.create_default_context()
-
-    db_pool = await asyncpg.create_pool(dsn=db_url, ssl=ssl_context, min_size=1, max_size=5)
-    logger.info("PostgreSQL connection pool established")
-
-
-async def log_interaction(session_id: str, question: str, answer: str):
-    """Persist a single Q&A interaction to the database."""
-    if db_pool is None:
-        return  # DB not configured
-    try:
-        async with db_pool.acquire() as conn:
-            await conn.execute(
-                "INSERT INTO chat_logs (session_id, question, answer) VALUES ($1, $2, $3)",
-                session_id,
-                question,
-                answer,
-            )
-    except Exception as exc:
-        logger.error("DB log error", error=str(exc))
 
 if __name__ == "__main__":
     import uvicorn

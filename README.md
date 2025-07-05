@@ -1,207 +1,267 @@
-# Mathieu Delehaye - Interactive CV
+# Mathieu Delehaye - Interactive AI-Powered CV
 
-A modern, responsive CV built with Flutter that works on web, mobile, and desktop platforms.
+A modern, responsive CV built with Flutter that works on web, mobile, and desktop platforms, featuring an AI-powered chatbot for interactive Q&A about professional experience.
+
+## 🌐 Live Application
+
+**🚀 [View Live CV Application](https://frontend-mdelehaye-cv.wittyflower-c2822a5a.eastus.azurecontainerapps.io/)**
+
+## 📸 Screenshots
+
+### Desktop & Web View
+![Desktop CV View](Screenshots/Screenshots00.png)
+
+### Mobile Views
+<div style="display: flex; gap: 20px;">
+  <img src="Screenshots/Screenshots01.png" alt="Mobile CV View" width="45%" />
+  <img src="Screenshots/Screenshots02.png" alt="Mobile Chat View" width="45%" />
+</div>
 
 ## 🚀 Features
 
-- **Responsive Design**: Works seamlessly on desktop, tablet, and mobile
-- **Modern UI**: Clean, professional layout with Material Design
-- **SEO Optimized**: Includes proper meta tags and sitemap for search engines
-- **Cross-Platform**: Single codebase for web, Android, iOS, and desktop
-- **Interactive**: Smooth animations and professional styling
+- **🌐 Cross-Platform**: Single codebase for web, Android, iOS, and desktop
+- **📱 Responsive Design**: Works seamlessly on desktop, tablet, and mobile
+- **🎨 Modern UI**: Clean, professional layout with Material Design
+- **🔍 SEO Optimized**: Includes proper meta tags and sitemap for search engines
+- **🤖 AI-Powered Chat**: Interactive Q&A about Mathieu's experience using OpenAI GPT
+- **⚡ Real-time Responses**: Instant answers to questions about skills, experience, and projects
+- **🔒 Privacy-First**: No user data storage, temporary processing only
+- **☁️ Cloud Deployed**: Hosted on Azure Container Apps with automatic scaling
+
+## 🏆 Project Achievements
+
+### ✅ Completed Features
+
+1. **📋 CV UI Layout** - Professional Flutter CV with sections for experience, education, and skills
+2. **🤖 AI Backend** - Python FastAPI backend with OpenAI integration for intelligent CV Q&A
+3. **🔗 AI Flutter Integration** - Seamless AI chat widget integrated into Flutter app with API calls
+4. **🌐 Web SEO Optimization** - Flutter web configured with HTML renderer and comprehensive SEO meta tags
+5. **☁️ Azure Deployment** - Both backend and frontend deployed to Azure Container Apps with custom domains
+6. **🔒 Privacy Compliance** - Removed all data collection/logging to eliminate privacy compliance requirements
+7. **📚 Advanced Chatbot** - LangChain-powered chatbot with OpenAI and vector storage for intelligent responses
+8. **📖 Documentation** - Complete README with privacy notices and deployment instructions
+
+### 🔄 In Progress
+
+- **📱 Android Build** - Building and testing Android APK for Google Play Store submission
+
+## 🔒 Privacy Notice & Data Handling
+
+This application prioritizes your privacy and includes transparent data handling practices:
+
+### 🤖 AI Chat Feature
+- **Real-time Processing**: Your chat messages are sent to OpenAI's API for intelligent responses about Mathieu's CV
+- **No Storage**: Chat messages and conversations are **never stored** or logged anywhere
+- **Temporary Processing**: Messages exist only during the request/response cycle
+- **No Personal Data Collection**: We do not collect, store, or track any personal identifying information
+- **Session-based**: Each conversation is independent with no history retention
+
+### 📊 Database Usage
+- **READ-ONLY Access**: The application connects to a database in READ-ONLY mode
+- **CV Content Only**: Database contains exclusively Mathieu's CV content and AI embeddings
+- **No User Data**: Zero user data, chat logs, or personal information stored in the database
+- **Fallback Support**: Application works with in-memory storage if database is unavailable
+
+### 🔐 Data Flow
+1. You type a question in the chat
+2. Question is sent to OpenAI's API for processing
+3. AI generates a response based on CV content
+4. Response is displayed to you
+5. **Nothing is stored** - the conversation ends there
+
+### 📋 Third-Party Services
+- **OpenAI API**: Chat messages are processed by OpenAI's GPT model
+- **Review OpenAI's Privacy Policy**: [OpenAI Privacy Policy](https://openai.com/privacy/)
+- **Azure Hosting**: Application hosted on Microsoft Azure (no user data stored)
+
+**By using the chat feature, you acknowledge that your messages will be temporarily sent to OpenAI's servers for processing. No conversation history is retained by this application.**
 
 ## 🛠️ Tech Stack
 
+### Frontend
 - **Flutter**: Cross-platform UI framework
 - **Dart**: Programming language
 - **Material Design**: Google's design system
-- **HTML**: SEO-friendly web deployment
+- **HTML Renderer**: SEO-friendly web deployment
+
+### Backend
+- **FastAPI**: High-performance Python web framework
+- **LangChain**: AI framework for intelligent responses
+- **OpenAI API**: GPT-powered chat responses
+- **ChromaDB**: Vector database for semantic search
+- **PostgreSQL**: READ-ONLY database for CV embeddings
+
+### Infrastructure
+- **Azure Container Apps**: Cloud hosting with auto-scaling
+- **Docker**: Containerized deployment
+- **GitHub Actions**: CI/CD pipeline
+- **Custom Domains**: Professional URL setup
 
 ## 📋 Prerequisites
 
 Before running this project, make sure you have:
 
 1. **Flutter SDK** installed ([Installation Guide](https://docs.flutter.dev/get-started/install))
-2. **A code editor** (VS Code, Android Studio, or IntelliJ)
-3. **Web browser** (Chrome, Firefox, Safari, or Edge)
+2. **Python 3.8+** for backend development
+3. **Docker** for containerized deployment
+4. **OpenAI API Key** for AI functionality
+5. **A code editor** (VS Code, Android Studio, or IntelliJ)
 
 ## 🏃‍♂️ How to Run
 
-### 1. Clone the Repository
+### Frontend (Flutter)
 
+#### 1. Clone the Repository
 ```bash
 git clone <your-repository-url>
 cd cv_flutter_app
 ```
 
-### 2. Install Dependencies
-
+#### 2. Install Dependencies
 ```bash
 flutter pub get
 ```
 
-### 3. Run on Different Platforms
+#### 3. Run on Different Platforms
 
-#### Web (Browser)
+**Web (Browser)**
 ```bash
 flutter run -d chrome
 ```
 
-#### Mobile (with emulator/device connected)
+**Mobile (with emulator/device connected)**
 ```bash
 flutter run
 ```
 
-#### Desktop
+**Desktop**
 ```bash
 flutter run -d windows  # or macos, linux
 ```
 
-## 🌐 Building for Web Deployment
+### Backend (FastAPI)
 
-### 1. Build for Web (SEO-Friendly)
+#### 1. Navigate to Backend Directory
+```bash
+cd chatbot_backend
+```
 
+#### 2. Create Virtual Environment
+```bash
+python -m venv .venv
+source .venv/bin/activate  # On Windows: .venv\Scripts\activate
+```
+
+#### 3. Install Dependencies
+```bash
+pip install -r requirements.txt
+```
+
+#### 4. Set Environment Variables
+```bash
+# Create .env file
+echo "OPENAI_API_KEY=your_openai_api_key_here" > .env
+```
+
+#### 5. Run Backend Server
+```bash
+uvicorn main:app --reload
+```
+
+## 🌐 Building for Production
+
+### Frontend Build
 ```bash
 flutter build web --web-renderer=html
 ```
 
-This creates a `build/web` folder with all the necessary files for web deployment.
-
-### 2. Serve Locally (Testing)
-
+### Backend Docker Build
 ```bash
-# Using Python (if installed)
-cd build/web
-python -m http.server 8000
-
-# Or using Node.js serve package
-npm install -g serve
-serve -s build/web -p 8000
+docker build -t mathieu-cv-backend .
 ```
 
-Visit `http://localhost:8000` to view your CV website.
+## ☁️ Azure Deployment
 
-## 🔧 Deployment Options
+The application is deployed using Azure Container Apps with the following architecture:
 
-### Option 1: Azure Container Apps (Recommended)
+- **Frontend**: Flutter web app with custom domain
+- **Backend**: FastAPI server with OpenAI integration
+- **Database**: PostgreSQL for CV embeddings (READ-ONLY)
+- **Auto-scaling**: Handles traffic spikes automatically
+- **HTTPS**: Secure connections with SSL certificates
 
-1. **Create a Dockerfile**:
-```dockerfile
-FROM nginx:alpine
-COPY build/web /usr/share/nginx/html
-EXPOSE 80
-CMD ["nginx", "-g", "daemon off;"]
-```
-
-2. **Build and deploy**:
+### Deployment Commands
 ```bash
-# Build the web app
-flutter build web --web-renderer=html
-
-# Build Docker image
-docker build -t mathieu-cv .
-
-# Deploy to Azure Container Apps
+# Deploy backend
 az containerapp create \
-  --name mathieu-cv \
+  --name mathieu-cv-backend \
   --resource-group your-resource-group \
-  --image mathieu-cv \
-  --target-port 80 \
-  --ingress external
-```
+  --image mathieu-cv-backend \
+  --environment-variables OPENAI_API_KEY=secretref:openai-key
 
-### Option 2: GitHub Pages
-
-1. **Create `.github/workflows/deploy.yml`**:
-```yaml
-name: Deploy to GitHub Pages
-
-on:
-  push:
-    branches: [ main ]
-
-jobs:
-  deploy:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v2
-      - uses: subosito/flutter-action@v2
-        with:
-          flutter-version: '3.x'
-      - run: flutter pub get
-      - run: flutter build web --web-renderer=html
-      - uses: peaceiris/actions-gh-pages@v3
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./build/web
-```
-
-### Option 3: Netlify/Vercel
-
-1. **Build the project**:
-```bash
-flutter build web --web-renderer=html
-```
-
-2. **Deploy the `build/web` folder** to Netlify or Vercel
-
-## 📱 Building for Mobile
-
-### Android APK
-```bash
-flutter build apk --release
-```
-
-### iOS (macOS required)
-```bash
-flutter build ios --release
+# Deploy frontend
+az containerapp create \
+  --name mathieu-cv-frontend \
+  --resource-group your-resource-group \
+  --image mathieu-cv-frontend \
+  --ingress external \
+  --target-port 80
 ```
 
 ## 🔍 SEO Configuration
 
-The project includes SEO optimizations:
+The project includes comprehensive SEO optimizations:
 
 - **Meta tags** in `web/index.html`
 - **Sitemap** at `web/sitemap.xml`
 - **HTML renderer** for better crawling
 - **Open Graph** tags for social sharing
-
-### Google Search Console Setup
-
-1. Go to [Google Search Console](https://search.google.com/search-console)
-2. Add your website URL
-3. Verify ownership using the HTML meta tag method
-4. Submit your sitemap: `https://yourdomain.com/sitemap.xml`
+- **Structured data** for rich snippets
+- **Performance optimization** for Core Web Vitals
 
 ## 📁 Project Structure
 
 ```
-cv_flutter_app/
-├── lib/
-│   └── main.dart          # Main application code
-├── web/
-│   ├── index.html         # SEO-optimized HTML
-│   └── sitemap.xml        # Search engine sitemap
-├── pubspec.yaml           # Flutter dependencies
-└── README.md             # This file
+MDelehayeAIResume/
+├── cv_flutter_app/           # Flutter frontend
+│   ├── lib/
+│   │   └── main.dart         # Main application code
+│   ├── web/
+│   │   ├── index.html        # SEO-optimized HTML
+│   │   └── sitemap.xml       # Search engine sitemap
+│   └── pubspec.yaml          # Flutter dependencies
+├── chatbot_backend/          # FastAPI backend
+│   ├── main.py              # Backend API server
+│   ├── requirements.txt     # Python dependencies
+│   └── Dockerfile           # Container configuration
+├── Screenshots/             # Application screenshots
+└── README.md               # This file
 ```
 
 ## 🎨 Customization
 
-### Styling
+### Frontend Styling
 - Colors and themes are defined in `lib/main.dart`
 - Modify the `ThemeData` in the `CVApp` class
 - Change colors in the `Colors.blue` references
 
-### Content
+### Backend Configuration
+- Update CV content in the vector database
+- Modify AI prompts in `main.py`
+- Configure OpenAI model parameters
+
+### Content Updates
 - Update personal information in the `_buildHeader()` method
 - Modify experience in the `_buildExperience()` method
 - Add projects in the `_buildProjects()` method
 
-### Layout
-- The CV is responsive and uses a card-based design
-- Maximum width is set to 800px for optimal readability
-- All sections are modular and can be reordered
+## 🚀 Performance
+
+- **Fast Loading**: Optimized Flutter web build
+- **Responsive**: Smooth performance on all devices
+- **SEO Friendly**: HTML rendering for search engines
+- **Scalable**: Auto-scaling backend infrastructure
+- **Reliable**: Fallback mechanisms for offline functionality
 
 ## 📝 License
 
@@ -210,10 +270,11 @@ This project is open source and available under the [MIT License](LICENSE).
 ## 📧 Contact
 
 **Mathieu Delehaye**
-- Email: mathieu.delehaye@gmail.com
-- LinkedIn: [linkedin.com/in/mathieudelehaye](https://linkedin.com/in/mathieudelehaye)
-- GitHub: [github.com/mathieudelehaye](https://github.com/mathieudelehaye)
+- 🌐 **Live CV**: [View Interactive CV](https://frontend-mdelehaye-cv.wittyflower-c2822a5a.eastus.azurecontainerapps.io/)
+- 📧 **Email**: mathieu.delehaye@gmail.com
+- 💼 **LinkedIn**: [linkedin.com/in/mathieudelehaye](https://linkedin.com/in/mathieudelehaye)
+- 🐙 **GitHub**: [github.com/mathieudelehaye](https://github.com/mathieudelehaye)
 
 ---
 
-*Built with ❤️ using Flutter*
+*Built with ❤️ using Flutter, FastAPI, and OpenAI • Deployed on Azure Container Apps*

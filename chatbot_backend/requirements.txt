@@ -1,42 +1,28 @@
-# Core FastAPI and web framework
-fastapi==0.109.2
-uvicorn[standard]==0.27.1
-python-multipart==0.0.7
-python-dotenv==1.0.1
+# FastAPI and web server
+fastapi==0.104.1
+uvicorn[standard]==0.24.0
+python-multipart==0.0.6
 
-# LangChain ecosystem
-langchain==0.1.6
-langchain-openai==0.0.5
-langchain-community>=0.0.18,<0.1
-langchain-core>=0.1.22,<0.2
+# LangChain and AI
+langchain>=0.1.0
+langchain-openai>=0.0.2
+langchain-community>=0.0.10
+langchain-core>=0.1.7
+openai==1.6.1
 
-# OpenAI and AI models
-openai==1.11.1
-tiktoken==0.5.2
+# Vector store (in-memory fallback)
+chromadb==0.4.18
 
-# Vector database and embeddings
+# Database for CV embeddings (READ-ONLY)
 psycopg[binary,pool]==3.1.18
 psycopg-pool==3.2.0
 pgvector>=0.2.4
-sqlalchemy>=2.0.27
 
-# Database and storage
-asyncpg==0.29.0
+# Environment and configuration
+python-dotenv==1.0.0
+pydantic==2.5.0
+pydantic-settings==2.1.0
 
-# Data processing and utilities
-pandas==2.2.0
-numpy==1.26.3
-pydantic==2.6.1
-
-# Optional: Quick UI for testing
-gradio==4.16.0
-
-# Logging and monitoring
-structlog==24.1.0
-
-# HTTP and CORS
-httpx==0.26.0
-
-# Text processing
-beautifulsoup4==4.12.3
-markdown==3.5.2 
+# Utilities
+python-json-logger==2.0.7
+httpx==0.25.2 
