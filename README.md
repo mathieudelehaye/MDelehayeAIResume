@@ -26,6 +26,8 @@ A modern, responsive CV built with Flutter that works on web, mobile, and deskto
 - **🎨 Modern UI**: Clean, professional layout with Material Design
 - **🔍 SEO Optimized**: Includes proper meta tags and sitemap for search engines
 - **🤖 AI-Powered Chat**: Interactive Q&A about Mathieu's experience using OpenAI GPT
+- **🧠 RAG Architecture**: Retrieval Augmented Generation with vector embeddings for accurate CV-specific responses
+- **📊 Vector Search**: PostgreSQL with pgvector extension for semantic similarity search
 - **⚡ Real-time Responses**: Instant answers to questions about skills, experience, and projects
 - **🔒 Privacy-First**: No user data storage, temporary processing only
 - **☁️ Cloud Deployed**: Hosted on Azure Container Apps with automatic scaling
@@ -98,6 +100,30 @@ This application prioritizes your privacy and includes transparent data handling
 - **Docker**: Containerized deployment
 - **GitHub Actions**: CI/CD pipeline
 - **Custom Domains**: Professional URL setup
+
+## 🧠 RAG Architecture
+
+The chatbot uses **Retrieval Augmented Generation (RAG)** to provide accurate, context-aware responses about Mathieu's professional background:
+
+### How RAG Works in This App
+
+1. **Vector Embeddings**: CV content is converted to high-dimensional vectors using OpenAI's embedding model
+2. **Vector Storage**: Embeddings are stored in PostgreSQL with pgvector extension for efficient similarity search
+3. **Semantic Retrieval**: When you ask a question, the system:
+   - Converts your question to a vector embedding
+   - Searches for the most similar CV sections using cosine similarity
+   - Retrieves the top 4 most relevant pieces of content
+4. **Contextual Generation**: LangChain combines retrieved CV sections with your question and sends to OpenAI GPT
+5. **Source Attribution**: Responses include citations of which CV sections were used
+
+### Technical Implementation
+- **Production**: PostgreSQL with pgvector for persistent vector storage
+- **Fallback**: ChromaDB in-memory storage if database unavailable
+- **Chunking**: CV content split into 500-character chunks with 50-character overlap
+- **Memory**: Conversation buffer maintains context across questions
+- **Search**: Cosine similarity with configurable top-k retrieval (default: 4)
+
+This architecture ensures responses are grounded in actual CV content rather than general knowledge, providing accurate and verifiable information about Mathieu's professional experience.
 
 ## 📋 Prerequisites
 
