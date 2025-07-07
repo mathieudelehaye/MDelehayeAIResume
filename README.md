@@ -24,7 +24,7 @@ A modern, responsive CV built with Flutter that works on web, mobile, and deskto
 - **🌐 Cross-Platform**: Single codebase for web, Android, iOS, and desktop
 - **📱 Responsive Design**: Works seamlessly on desktop, tablet, and mobile
 - **🎨 Modern UI**: Clean, professional layout with Material Design
-- **🔍 SEO Optimized**: Includes proper meta tags and sitemap for search engines
+- **🔍 SEO Optimized**: Enhanced search engine indexing with static content and comprehensive meta tags
 - **🤖 AI-Powered Chat**: Interactive Q&A about Mathieu's experience using OpenAI GPT
 - **🧠 RAG Architecture**: Retrieval Augmented Generation with vector embeddings for accurate CV-specific responses
 - **📊 Vector Search**: PostgreSQL with pgvector extension for semantic similarity search
@@ -39,7 +39,7 @@ A modern, responsive CV built with Flutter that works on web, mobile, and deskto
 1. **📋 CV UI Layout** - Professional Flutter CV with sections for experience, education, and skills
 2. **🤖 AI Backend** - Python FastAPI backend with OpenAI integration for intelligent CV Q&A
 3. **🔗 AI Flutter Integration** - Seamless AI chat widget integrated into Flutter app with API calls
-4. **🌐 Web SEO Optimization** - Flutter web configured with HTML renderer and comprehensive SEO meta tags
+4. **🌐 Web SEO Optimization** - Flutter web configured with enhanced SEO including static landing page and comprehensive meta tags
 5. **☁️ Azure Deployment** - Both backend and frontend deployed to Azure Container Apps with custom domains
 6. **🔒 Privacy Compliance** - Removed all data collection/logging to eliminate privacy compliance requirements
 7. **📚 Advanced Chatbot** - LangChain-powered chatbot with OpenAI and vector storage for intelligent responses
@@ -86,7 +86,7 @@ This application prioritizes your privacy and includes transparent data handling
 - **Flutter**: Cross-platform UI framework
 - **Dart**: Programming language
 - **Material Design**: Google's design system
-- **HTML Renderer**: SEO-friendly web deployment
+- **Skwasm + CanvasKit**: Modern web rendering with CanvasKit fallback
 
 ### Backend
 - **FastAPI**: High-performance Python web framework
@@ -200,7 +200,7 @@ uvicorn main:app --reload
 
 ### Frontend Build
 ```bash
-flutter build web --web-renderer=html
+flutter build web --release --wasm
 ```
 
 ### Backend Docker Build
@@ -242,10 +242,11 @@ The project includes comprehensive SEO optimizations:
 
 - **Meta tags** in `web/index.html`
 - **Sitemap** at `web/sitemap.xml`
-- **HTML renderer** for better crawling
+- **Static landing page** with duplicate content for improved search engine indexing
 - **Open Graph** tags for social sharing
 - **Structured data** for rich snippets
 - **Performance optimization** for Core Web Vitals
+- **Additional SEO improvements** currently under test and investigation
 
 ## 📁 Project Structure
 
@@ -285,9 +286,9 @@ MDelehayeAIResume/
 
 ## 🚀 Performance
 
-- **Fast Loading**: Optimized Flutter web build
+- **Fast Loading**: Optimized Flutter web build with Skwasm rendering
 - **Responsive**: Smooth performance on all devices
-- **SEO Friendly**: HTML rendering for search engines
+- **SEO Friendly**: Enhanced search engine indexing with static content
 - **Scalable**: Auto-scaling backend infrastructure
 - **Reliable**: Fallback mechanisms for offline functionality
 
