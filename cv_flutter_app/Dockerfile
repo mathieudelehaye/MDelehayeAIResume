@@ -17,12 +17,11 @@ RUN useradd -ms /bin/bash flutter
 USER flutter
 WORKDIR /home/flutter
 
-# Install Flutter
-RUN git clone https://github.com/flutter/flutter.git
+# Install Flutter using a specific stable version
+RUN git clone https://github.com/flutter/flutter.git -b stable --depth 1
 ENV PATH="/home/flutter/flutter/bin:${PATH}"
-RUN flutter doctor
-RUN flutter channel stable
-RUN flutter upgrade
+RUN flutter --version
+RUN flutter precache --web
 
 # Set up web
 RUN flutter config --enable-web
