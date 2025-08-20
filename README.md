@@ -6,7 +6,7 @@ A modern, responsive CV built with Flutter that works on web, mobile, and deskto
 
 **🚀 [View Live CV Application](https://cv-flutter-app.onrender.com/)**
 
-> **⏳ Note:** The first question to the chatbot may take a couple of seconds to respond as the system initializes. Subsequent questions will be much faster.
+> **⏳ Note:** It may take up to 10 seconds to launch if the app is inactive.
 
 ## 📸 Screenshots
 
