@@ -1,3 +1,14 @@
+---
+title: CV Chatbot API
+emoji: 🤖
+colorFrom: blue
+colorTo: green
+sdk: docker
+pinned: false
+license: mit
+app_port: 7860
+---
+
 # CV Chatbot Backend with LangChain Agents
 
 Advanced AI chatbot backend using **LangChain agents**, **OpenAI API**, and **vector embeddings** to answer questions about Mathieu Delehaye's CV and professional background.
@@ -323,4 +334,4 @@ This project is part of Mathieu Delehaye's CV application portfolio.
 For questions or issues:
 - Email: mathieu.delehaye@gmail.com
 - LinkedIn: linkedin.com/in/mathieudelehaye
-- GitHub: github.com/mathieudelehaye 
+- GitHub: github.com/mathieudelehaye
