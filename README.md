@@ -4,7 +4,7 @@ A modern, responsive CV built with Flutter that works on web, mobile, and deskto
 
 ## 🌐 Live Application
 
-**🚀 [View Live CV Application](https://frontend-mdelehaye-cv.wittyflower-c2822a5a.eastus.azurecontainerapps.io/)**
+**🚀 [View Live CV Application](https://cv-flutter-app.onrender.com/)**
 
 > **⏳ Note:** The first question to the chatbot may take a couple of seconds to respond as the system initializes. Subsequent questions will be much faster.
 
@@ -299,7 +299,7 @@ This project is open source and available under the [MIT License](LICENSE).
 ## 📧 Contact
 
 **Mathieu Delehaye**
-- 🌐 **Live CV**: [View Interactive CV](https://frontend-mdelehaye-cv.wittyflower-c2822a5a.eastus.azurecontainerapps.io/)
+- 🌐 **Live CV**: [View Interactive CV](https://cv-flutter-app.onrender.com/)
 - 📧 **Email**: mathieu.delehaye@gmail.com
 - 💼 **LinkedIn**: [linkedin.com/in/mathieudelehaye](https://linkedin.com/in/mathieudelehaye)
 - 🐙 **GitHub**: [github.com/mathieudelehaye](https://github.com/mathieudelehaye)
