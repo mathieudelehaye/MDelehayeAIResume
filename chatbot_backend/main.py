@@ -145,10 +145,10 @@ default_origins = [
 ]
 ALLOWED_ORIGINS = os.getenv("ALLOWED_ORIGINS", ",".join(default_origins)).split(",")
 
-# CORS configuration
+# CORS configuration - Allow all origins for development
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=ALLOWED_ORIGINS,
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
